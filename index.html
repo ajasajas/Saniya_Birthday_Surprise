@@ -514,7 +514,7 @@
       font-weight: 600;
     }
 
-    /* STAGE 5: BALLOONS (Messages Hidden at First) */
+    /* STAGE 5: BALLOONS (Messages ONLY show when each balloon is popped) */
     .balloons-area {
       display: flex;
       justify-content: center;
@@ -566,10 +566,9 @@
       gap: 10px;
       width: 100%;
       text-align: left;
-      min-height: 140px; /* Reserves space so layout stays clean */
+      min-height: 140px;
     }
 
-    /* Hidden by default until popped */
     .reason-box {
       display: none;
       opacity: 0;
@@ -595,7 +594,7 @@
     }
 
     .reason-box .r-label {
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 800;
       letter-spacing: 1.5px;
       color: var(--accent);
@@ -764,7 +763,7 @@
 
     @keyframes unfoldLetter {
       0% { opacity: 0; transform: translateY(30px) scale(0.92); }
-      100% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
     .letter-paper h3 {
@@ -896,13 +895,13 @@
     <div style="font-size: 12px; color: var(--text-muted); margin-top: 14px;">Tap anywhere to begin the magic ✨</div>
   </div>
 
-  <!-- ================= STAGE 2: AIMABLE CUPID BOW WITH HIT/MISS LOGIC ================= -->
+  <!-- ================= STAGE 2: AIMABLE CUPID BOW (DEFAULTS TO OFF-CENTER MISS) ================= -->
   <div class="screen-stage" id="stage-2">
     <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 4px;">Cupid's Challenge</div>
     <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">Aim & Shoot Sani's Heart 🎯</h2>
 
     <!-- Miss feedback banner -->
-    <div class="miss-banner" id="missBanner">Oops! You missed Sani's heart 😅 Try again!</div>
+    <div class="miss-banner" id="missBanner">Oops! You missed Sani's heart 😅 Try aiming straight!</div>
 
     <div class="cupid-zone" id="cupidZone">
       <div class="heart-target" id="heartTarget">
@@ -927,7 +926,7 @@
           <span>🏹 Shoot Arrow</span>
         </button>
         <div class="controls-tip">
-          📱 <b>Drag to Aim &amp; Release</b> • 💻 <b>Left/Right Arrows</b> to aim, <b>Space</b> to shoot
+          📱 <b>Drag to Aim Center &amp; Release</b> • 💻 <b>Left/Right Arrows</b> to aim, <b>Space</b> to shoot
         </div>
       </div>
     </div>
@@ -971,7 +970,7 @@
     </div>
   </div>
 
-  <!-- ================= STAGE 5: BALLOONS (Messages ONLY show when each balloon is popped) ================= -->
+  <!-- ================= STAGE 5: BALLOONS ================= -->
   <div class="screen-stage" id="stage-5">
     <h2 style="font-size: 26px; font-family: 'Playfair Display', serif; margin-bottom: 4px;">Pop the balloons 🎈</h2>
     <div style="font-size: 13.5px; color: var(--text-muted);" id="balloonSubtitle">Pop a balloon to unlock its secret reason!</div>
@@ -1269,7 +1268,7 @@
     });
 
     // ====================================================================
-    // --- STAGE 2: ACCURATE HIT/MISS LOGIC WITH "TRY AGAIN" CHANCE ---
+    // --- STAGE 2: DEFAULT OFF-CENTER AIM & MISS/HIT CHANCE LOGIC ---
     // ====================================================================
     const cupidZone = document.getElementById('cupidZone');
     const cupidBow = document.getElementById('cupidBow');
@@ -1279,7 +1278,9 @@
     const shootArrowBtn = document.getElementById('shootArrowBtn');
     const missBanner = document.getElementById('missBanner');
 
-    let bowAngleDeg = 0;
+    // Default angle starts clearly pointing AWAY from the heart (-32 degrees to the left)
+    const DEFAULT_MISS_ANGLE = -32;
+    let bowAngleDeg = DEFAULT_MISS_ANGLE;
     let isArrowInFlight = false;
     let isAimingTouch = false;
 
@@ -1292,12 +1293,13 @@
     }
 
     function resetBowAndArrow() {
-      bowAngleDeg = 0;
+      // Always reset back to an off-center angle pointing away from the heart
+      bowAngleDeg = DEFAULT_MISS_ANGLE;
       isArrowInFlight = false;
       isAimingTouch = false;
       heartTarget.classList.remove('hit');
-      cupidBow.style.transform = 'rotate(0deg)';
-      aimGuide.style.transform = 'rotate(0deg)';
+      cupidBow.style.transform = `rotate(${DEFAULT_MISS_ANGLE}deg)`;
+      aimGuide.style.transform = `rotate(${DEFAULT_MISS_ANGLE}deg)`;
       aimGuide.style.opacity = '1';
       arrowFlight.style.transition = 'none';
       arrowFlight.style.transform = 'translateX(-50%) translate(0px, 0px) rotate(0deg)';
@@ -1311,14 +1313,12 @@
       aimGuide.style.opacity = '0';
       missBanner.style.display = 'none';
 
-      // ACCURACY CHECK:
-      // The heart is centered, so an accurate hit requires aiming between -14 and +14 degrees
+      // An accurate hit requires deliberately steering the bow close to center: between -14 and +14 degrees
       const isAccurateHit = Math.abs(bowAngleDeg) <= 14;
-
       const rad = (bowAngleDeg * Math.PI) / 180;
 
       if (isAccurateHit) {
-        // --- HIT PATH: Arrow strikes the heart ---
+        // --- HIT PATH: Arrow hits the center heart ---
         const flyDistance = 220;
         const targetX = Math.sin(rad) * flyDistance;
         const targetY = -Math.cos(rad) * flyDistance;
@@ -1332,22 +1332,22 @@
           const heartRect = heartTarget.getBoundingClientRect();
           triggerConfettiBurst(heartRect.left + heartRect.width / 2, heartRect.top + heartRect.height / 2, 45);
 
-          // Proceed to birthday celebration stage
+          // Proceed to celebration banner stage
           setTimeout(() => {
             goToStage(3);
           }, 750);
         }, 450);
 
       } else {
-        // --- MISS PATH: Arrow shoots off past the heart ---
-        const flyDistance = 420; // Flies completely past the top
+        // --- MISS PATH: Arrow shoots off trajectory into the sky ---
+        const flyDistance = 420;
         const targetX = Math.sin(rad) * flyDistance;
         const targetY = -Math.cos(rad) * flyDistance;
 
         arrowFlight.style.transition = 'transform 0.5s ease-out';
         arrowFlight.style.transform = `translateX(-50%) translate(${targetX}px, ${targetY}px) rotate(${bowAngleDeg}deg) scale(0.9)`;
 
-        // Give next chance after arrow misses
+        // Display miss message and give next chance
         setTimeout(() => {
           arrowFlight.style.opacity = '0';
           missBanner.style.display = 'block';
@@ -1355,7 +1355,7 @@
           // Reset bow and arrow for the next chance
           setTimeout(() => {
             resetBowAndArrow();
-          }, 400);
+          }, 450);
         }, 500);
       }
     }
@@ -1447,9 +1447,7 @@
       goToStage(5);
     });
 
-    // ====================================================================
-    // --- STAGE 5: BALLOONS (Reveal only when the balloon is popped) ---
-    // ====================================================================
+    // Stage 5 Balloon Popping
     let poppedCount = 0;
     function popBalloon(index, el) {
       startMusic();
@@ -1457,7 +1455,6 @@
       el.classList.add('popped');
       poppedCount++;
 
-      // Reveal the specific reason card for this popped balloon
       const rBox = document.getElementById(`reason-${index}`);
       if (rBox) {
         rBox.classList.add('revealed');
