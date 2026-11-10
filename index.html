@@ -180,7 +180,7 @@
       box-shadow: 0 8px 20px rgba(0,0,0,0.3);
     }
 
-    /* STAGE 1: NEW REDESIGNED LUXURY GIFT BOX (NOT LOOKING LIKE ENGLAND FLAG) */
+    /* STAGE 1: REDESIGNED LUXURY GIFT BOX */
     .luxury-gift-box {
       width: 185px;
       height: 185px;
@@ -206,7 +206,6 @@
       overflow: hidden;
     }
 
-    /* Single Elegant Diagonal Gold Sash */
     .gift-diagonal-ribbon {
       position: absolute;
       top: -30px;
@@ -218,7 +217,6 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
-    /* Sparkling Gold Star Pattern */
     .gift-cube::after {
       content: '✦';
       position: absolute;
@@ -228,7 +226,6 @@
       color: rgba(255, 215, 0, 0.65);
     }
 
-    /* Center Rose Gold Bow with Heart Crest */
     .luxury-bow {
       position: absolute;
       top: 50%;
@@ -299,29 +296,42 @@
       font-style: italic;
     }
 
-    /* STAGE 2: HEART TARGET & CUPID BOW */
+    /* STAGE 2: REALISTIC AIMABLE CUPID BOW & ARROW */
     .cupid-zone {
       position: relative;
       width: 100%;
-      height: 350px;
+      height: 380px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
-      margin: 15px 0;
+      margin: 10px 0;
+      touch-action: none; /* Allows free multi-touch drag aiming without scrolling */
     }
 
     .heart-target {
-      width: 120px;
-      height: 120px;
+      width: 125px;
+      height: 125px;
       position: relative;
       animation: heartbeat 1.4s ease-in-out infinite;
       cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .heart-target.hit {
+      animation: heartHit 0.6s ease-out forwards;
     }
 
     @keyframes heartbeat {
-      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 51, 102, 0.4)); }
-      50% { transform: scale(1.12); filter: drop-shadow(0 0 28px rgba(255, 51, 102, 0.8)); }
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(255, 51, 102, 0.45)); }
+      50% { transform: scale(1.12); filter: drop-shadow(0 0 30px rgba(255, 51, 102, 0.85)); }
+    }
+
+    @keyframes heartHit {
+      0% { transform: scale(1.1); }
+      30% { transform: scale(1.4) rotate(8deg); filter: drop-shadow(0 0 45px #ffd166); }
+      60% { transform: scale(0.9) rotate(-6deg); }
+      100% { transform: scale(1.2) rotate(0deg); filter: drop-shadow(0 0 50px #ff3366); }
     }
 
     .heart-target svg {
@@ -330,33 +340,59 @@
       fill: url(#heartGrad);
     }
 
+    .aim-guide-line {
+      position: absolute;
+      bottom: 95px;
+      left: 50%;
+      width: 2px;
+      height: 140px;
+      transform-origin: bottom center;
+      border-left: 2px dashed rgba(255, 209, 102, 0.45);
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
     .bow-container {
       position: relative;
-      cursor: pointer;
+      cursor: grab;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      transform-origin: 50% 60%;
+      transition: transform 0.05s ease-out;
+      user-select: none;
+    }
+
+    .bow-container:active {
+      cursor: grabbing;
     }
 
     .bow-svg {
-      width: 76px;
-      height: 76px;
-      filter: drop-shadow(0 4px 10px rgba(255, 209, 102, 0.5));
+      width: 90px;
+      height: 90px;
+      filter: drop-shadow(0 4px 12px rgba(255, 209, 102, 0.5));
     }
 
+    /* Dynamic controllable arrow */
     .arrow-flight {
       position: absolute;
-      bottom: 55px;
-      font-size: 32px;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 34px;
       pointer-events: none;
-      transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-      opacity: 0;
+      z-index: 10;
+      transform-origin: center center;
     }
 
-    .arrow-flight.flying {
-      opacity: 1;
-      transform: translateY(-200px) scale(1.3);
+    .controls-tip {
+      font-size: 13px;
+      color: var(--accent);
+      background: rgba(255, 209, 102, 0.12);
+      padding: 6px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 209, 102, 0.3);
+      margin-top: 10px;
     }
 
     /* STAGE 3: BANNER */
@@ -809,7 +845,7 @@
     </defs>
   </svg>
 
-  <!-- ================= STAGE 1: UNWRAP (Redesigned Elegant Gift Box) ================= -->
+  <!-- ================= STAGE 1: UNWRAP ================= -->
   <div class="screen-stage active" id="stage-1">
     <div class="luxury-gift-box" id="giftBoxBtn">
       <div class="gift-cube">
@@ -835,28 +871,42 @@
     <div style="font-size: 12px; color: var(--text-muted); margin-top: 14px;">Tap anywhere to begin the magic ✨</div>
   </div>
 
-  <!-- ================= STAGE 2: HEART TARGET ================= -->
+  <!-- ================= STAGE 2: REALISTIC AIMABLE HEART SHOOTER ================= -->
   <div class="screen-stage" id="stage-2">
-    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 8px;">Step inside</div>
-    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 16px;">Your birthday surprise starts here</h2>
+    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 6px;">Cupid's Challenge</div>
+    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 12px;">Aim & Shoot Sani's Heart 🎯</h2>
 
-    <div class="cupid-zone">
+    <div class="cupid-zone" id="cupidZone">
       <div class="heart-target" id="heartTarget">
         <svg viewBox="0 0 32 32">
           <path d="M16 28.5S2 19.5 2 10.5C2 5.5 6 2 11 2c3.2 0 5 2 5 2s1.8-2 5-2c5 0 9 3.5 9 8.5 0 9-14 18-14 18z"/>
         </svg>
       </div>
 
-      <div class="arrow-flight" id="arrowFlight">💘</div>
+      <!-- Dotted laser aim guide that rotates with you -->
+      <div class="aim-guide-line" id="aimGuide"></div>
 
+      <!-- Controllable Cupid Bow -->
       <div class="bow-container" id="cupidBow">
-        <svg class="bow-svg" viewBox="0 0 100 100" fill="none" stroke="#ffd166" stroke-width="6" stroke-linecap="round">
-          <path d="M20,10 Q65,50 20,90" />
-          <line x1="20" y1="10" x2="20" y2="90" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
-          <line x1="10" y1="50" x2="60" y2="50" stroke="#ff3366" stroke-width="5"/>
-          <polygon points="65,50 55,45 55,55" fill="#ff3366"/>
+        <div class="arrow-flight" id="arrowFlight">💘</div>
+        <svg class="bow-svg" viewBox="0 0 100 100" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round">
+          <!-- Bow Wood curve -->
+          <path d="M15,85 Q50,15 85,85" stroke="#ffd166" />
+          <!-- Bowstring -->
+          <line x1="15" y1="85" x2="85" y2="85" stroke="rgba(255,255,255,0.7)" stroke-width="2" id="bowString"/>
+          <!-- Bow grip center wrap -->
+          <line x1="44" y1="36" x2="56" y2="36" stroke="#ff3366" stroke-width="6"/>
         </svg>
-        <div style="font-size: 13px; font-weight: 600; color: var(--accent);">Shoot the arrow to begin 🏹</div>
+      </div>
+
+      <!-- Action Button + Keyboard/Touch instructions -->
+      <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+        <button class="btn-magic" id="shootArrowBtn" style="padding:10px 28px; font-size:15px;">
+          <span>🏹 Shoot Arrow</span>
+        </button>
+        <div class="controls-tip">
+          📱 <b>Touch/Drag</b> to aim &amp; release • 💻 <b>Left/Right Arrows</b> to aim, <b>Space</b> to shoot
+        </div>
       </div>
     </div>
   </div>
@@ -1014,7 +1064,6 @@
     </div>
 
     <div class="finale-actions">
-      <!-- Interactive Confetti Cannon -->
       <button class="btn-magic" id="confettiPopperBtn">
         <span>Fire Confetti! 🎊</span>
       </button>
@@ -1028,6 +1077,7 @@
   </div>
 
   <script>
+    // GitHub repository images
     const PHOTOS = [
       "image1.jpg",
       "image2.jpg",
@@ -1109,7 +1159,7 @@
       renderMemories();
     }
 
-    // Touch Swipe Support for Mobile
+    // Touch Swipe on Polaroid Deck
     const polaroidDeck = document.getElementById('polaroidDeck');
     let touchStartX = 0;
     let touchEndX = 0;
@@ -1139,9 +1189,7 @@
           hasStartedAudio = true;
           audioWave.classList.remove('audio-paused');
           audioText.innerText = "Music: On";
-        }).catch(() => {
-          // Keep waiting for gesture if blocked
-        });
+        }).catch(() => {});
       }
     }
 
@@ -1160,7 +1208,6 @@
       }
     };
 
-    // Unlock audio on first click/tap anywhere
     window.addEventListener('click', () => {
       startMusic();
     }, { once: true });
@@ -1178,6 +1225,9 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
+      if (stageNum === 2) {
+        resetBowAndArrow();
+      }
       if (stageNum === 6) {
         renderMemories();
       }
@@ -1186,7 +1236,7 @@
       }
     }
 
-    // Explicit Button Bindings (no arrow function traps)
+    // Stage 1 -> 2
     document.getElementById('unwrapBtn').addEventListener('click', function(e) {
       e.stopPropagation();
       goToStage(2);
@@ -1197,23 +1247,134 @@
       goToStage(2);
     });
 
+    // =========================================================
+    // --- STAGE 2: REALISTIC TOUCH & KEYBOARD CUPID CONTROLS ---
+    // =========================================================
+    const cupidZone = document.getElementById('cupidZone');
     const cupidBow = document.getElementById('cupidBow');
-    const arrow = document.getElementById('arrowFlight');
-    cupidBow.addEventListener('click', function(e) {
-      e.stopPropagation();
+    const arrowFlight = document.getElementById('arrowFlight');
+    const aimGuide = document.getElementById('aimGuide');
+    const heartTarget = document.getElementById('heartTarget');
+    const shootArrowBtn = document.getElementById('shootArrowBtn');
+
+    let bowAngleDeg = 0; // -40deg to +40deg
+    let isArrowInFlight = false;
+    let isAimingTouch = false;
+
+    function updateBowAim(angle) {
+      if (isArrowInFlight) return;
+      // Clamp between -42 and 42 degrees
+      bowAngleDeg = Math.max(-42, Math.min(42, angle));
+      cupidBow.style.transform = `rotate(${bowAngleDeg}deg)`;
+      aimGuide.style.transform = `rotate(${bowAngleDeg}deg)`;
+    }
+
+    function resetBowAndArrow() {
+      bowAngleDeg = 0;
+      isArrowInFlight = false;
+      isAimingTouch = false;
+      heartTarget.classList.remove('hit');
+      cupidBow.style.transform = 'rotate(0deg)';
+      aimGuide.style.transform = 'rotate(0deg)';
+      aimGuide.style.opacity = '1';
+      arrowFlight.style.transition = 'none';
+      arrowFlight.style.transform = 'translateX(-50%) translate(0px, 0px) rotate(0deg)';
+      arrowFlight.style.opacity = '1';
+    }
+
+    function shootArrow() {
+      if (isArrowInFlight || currentStage !== 2) return;
+      isArrowInFlight = true;
       startMusic();
-      arrow.classList.add('flying');
+      aimGuide.style.opacity = '0';
+
+      // Calculate vector towards heart based on current angle
+      const rad = (bowAngleDeg * Math.PI) / 180;
+      const flyDistance = 220;
+      const targetX = Math.sin(rad) * flyDistance;
+      const targetY = -Math.cos(rad) * flyDistance;
+
+      arrowFlight.style.transition = 'transform 0.45s cubic-bezier(0.2, 0.9, 0.4, 1.1)';
+      arrowFlight.style.transform = `translateX(-50%) translate(${targetX}px, ${targetY}px) rotate(${bowAngleDeg}deg) scale(1.25)`;
+
+      // Impact on Heart
       setTimeout(() => {
-        triggerConfettiBurst(window.innerWidth / 2, window.innerHeight * 0.35);
-        setTimeout(() => goToStage(3), 600);
-      }, 480);
+        heartTarget.classList.add('hit');
+        const heartRect = heartTarget.getBoundingClientRect();
+        triggerConfettiBurst(heartRect.left + heartRect.width / 2, heartRect.top + heartRect.height / 2, 45);
+
+        // Transition to next stage
+        setTimeout(() => {
+          goToStage(3);
+        }, 750);
+      }, 450);
+    }
+
+    // Touch & Pointer Drag Aiming (Phone, Tablet & Mouse)
+    cupidZone.addEventListener('pointerdown', (e) => {
+      if (isArrowInFlight) return;
+      // Don't intercept button clicks
+      if (e.target.closest('#shootArrowBtn')) return;
+      isAimingTouch = true;
+      aimWithPointer(e);
     });
 
+    window.addEventListener('pointermove', (e) => {
+      if (!isAimingTouch || isArrowInFlight || currentStage !== 2) return;
+      aimWithPointer(e);
+    });
+
+    window.addEventListener('pointerup', () => {
+      if (isAimingTouch) {
+        isAimingTouch = false;
+        shootArrow();
+      }
+    });
+
+    function aimWithPointer(e) {
+      const bowRect = cupidBow.getBoundingClientRect();
+      const bowCenterX = bowRect.left + bowRect.width / 2;
+      const bowCenterY = bowRect.top + bowRect.height / 2;
+      
+      const deltaX = e.clientX - bowCenterX;
+      const deltaY = bowCenterY - e.clientY; // Inverted because higher is lower Y
+
+      let angle = Math.atan2(deltaX, Math.max(deltaY, 40)) * (180 / Math.PI);
+      updateBowAim(angle);
+    }
+
+    // Keyboard Arrow Controls
+    window.addEventListener('keydown', (e) => {
+      if (currentStage !== 2 || isArrowInFlight) return;
+
+      if (e.key === 'ArrowLeft' || e.key === 'Left') {
+        updateBowAim(bowAngleDeg - 6);
+      } else if (e.key === 'ArrowRight' || e.key === 'Right') {
+        updateBowAim(bowAngleDeg + 6);
+      } else if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        shootArrow();
+      }
+    });
+
+    // Button Click or Tap
+    shootArrowBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      shootArrow();
+    });
+
+    cupidBow.addEventListener('click', (e) => {
+      e.stopPropagation();
+      shootArrow();
+    });
+
+    // Stage 3 -> 4
     document.getElementById('bannerNextBtn').addEventListener('click', function(e) {
       e.stopPropagation();
       goToStage(4);
     });
 
+    // Stage 4 Cake Blow
     const cakeContainer = document.getElementById('cakeContainer');
     const flame = document.getElementById('candleFlame');
     const wishBadge = document.getElementById('wishBadge');
@@ -1238,6 +1399,7 @@
       goToStage(5);
     });
 
+    // Stage 5 Balloon Popping
     let poppedCount = 0;
     function popBalloon(index, el) {
       startMusic();
@@ -1290,7 +1452,7 @@
       goToStage(8);
     });
 
-    // --- ON-DEMAND CONFETTI POPPER (STAGE 8) ---
+    // Stage 8 Confetti Cannon
     function triggerGrandConfettiCannon() {
       triggerConfettiBurst(window.innerWidth * 0.25, window.innerHeight * 0.5, 45);
       triggerConfettiBurst(window.innerWidth * 0.75, window.innerHeight * 0.5, 45);
@@ -1332,7 +1494,7 @@
       currentStage = 1;
       poppedCount = 0;
       flame.classList.remove('blown');
-      arrow.classList.remove('flying');
+      resetBowAndArrow();
       document.querySelectorAll('.balloon-item').forEach(b => b.classList.remove('popped'));
       document.querySelectorAll('.reason-box').forEach(r => r.classList.remove('unlocked'));
       document.getElementById('envelopeScreen').style.display = 'block';
