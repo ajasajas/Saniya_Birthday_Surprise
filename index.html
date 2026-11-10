@@ -296,7 +296,7 @@
       font-style: italic;
     }
 
-    /* STAGE 2: REALISTIC AIMABLE CUPID BOW & ARROW */
+    /* STAGE 2: AIMABLE CUPID BOW & COLLISION DETECTION */
     .cupid-zone {
       position: relative;
       width: 100%;
@@ -306,7 +306,7 @@
       align-items: center;
       justify-content: space-between;
       margin: 10px 0;
-      touch-action: none; /* Allows free multi-touch drag aiming without scrolling */
+      touch-action: none;
     }
 
     .heart-target {
@@ -373,7 +373,6 @@
       filter: drop-shadow(0 4px 12px rgba(255, 209, 102, 0.5));
     }
 
-    /* Dynamic controllable arrow */
     .arrow-flight {
       position: absolute;
       bottom: 24px;
@@ -385,14 +384,32 @@
       transform-origin: center center;
     }
 
+    .miss-banner {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #ffd166;
+      background: rgba(255, 51, 102, 0.25);
+      border: 1px solid rgba(255, 51, 102, 0.5);
+      padding: 6px 18px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+      display: none;
+      animation: popIn 0.3s ease-out;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
     .controls-tip {
-      font-size: 13px;
+      font-size: 12.5px;
       color: var(--accent);
       background: rgba(255, 209, 102, 0.12);
-      padding: 6px 16px;
+      padding: 5px 14px;
       border-radius: 999px;
       border: 1px solid rgba(255, 209, 102, 0.3);
-      margin-top: 10px;
+      margin-top: 4px;
     }
 
     /* STAGE 3: BANNER */
@@ -497,7 +514,7 @@
       font-weight: 600;
     }
 
-    /* STAGE 5: BALLOONS */
+    /* STAGE 5: BALLOONS (Messages Hidden at First) */
     .balloons-area {
       display: flex;
       justify-content: center;
@@ -546,31 +563,39 @@
     .reasons-list {
       display: flex;
       flex-direction: column;
-      gap: 9px;
+      gap: 10px;
       width: 100%;
       text-align: left;
+      min-height: 140px; /* Reserves space so layout stays clean */
     }
 
+    /* Hidden by default until popped */
     .reason-box {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: none;
+      opacity: 0;
+      transform: translateY(14px);
+      background: rgba(255, 51, 102, 0.14);
+      border: 1px solid rgba(255, 51, 102, 0.4);
       border-radius: 14px;
-      padding: 11px 16px;
-      font-size: 13.5px;
-      opacity: 0.35;
-      transform: translateY(6px);
-      transition: all 0.4s ease;
+      padding: 12px 18px;
+      font-size: 14px;
+      transition: all 0.45s cubic-bezier(0.19, 1, 0.22, 1);
     }
 
-    .reason-box.unlocked {
+    .reason-box.revealed {
+      display: block;
       opacity: 1;
       transform: translateY(0);
-      background: rgba(255, 51, 102, 0.12);
-      border-color: rgba(255, 51, 102, 0.35);
+      animation: slideInReason 0.45s ease-out forwards;
+    }
+
+    @keyframes slideInReason {
+      0% { opacity: 0; transform: translateY(14px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
     .reason-box .r-label {
-      font-size: 10.5px;
+      font-size: 11px;
       font-weight: 800;
       letter-spacing: 1.5px;
       color: var(--accent);
@@ -821,7 +846,7 @@
 </head>
 <body>
 
-  <!-- Audio Element: plays Humnava.mp3 directly from root repository -->
+  <!-- Audio Element: plays Humnava.mp3 from root repository -->
   <audio id="bgMusic" src="Humnava.mp3" loop preload="auto" playsinline></audio>
 
   <!-- Ambient Stars & Confetti Canvas -->
@@ -871,10 +896,13 @@
     <div style="font-size: 12px; color: var(--text-muted); margin-top: 14px;">Tap anywhere to begin the magic ✨</div>
   </div>
 
-  <!-- ================= STAGE 2: REALISTIC AIMABLE HEART SHOOTER ================= -->
+  <!-- ================= STAGE 2: AIMABLE CUPID BOW WITH HIT/MISS LOGIC ================= -->
   <div class="screen-stage" id="stage-2">
-    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 6px;">Cupid's Challenge</div>
-    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 12px;">Aim & Shoot Sani's Heart 🎯</h2>
+    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 4px;">Cupid's Challenge</div>
+    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">Aim & Shoot Sani's Heart 🎯</h2>
+
+    <!-- Miss feedback banner -->
+    <div class="miss-banner" id="missBanner">Oops! You missed Sani's heart 😅 Try again!</div>
 
     <div class="cupid-zone" id="cupidZone">
       <div class="heart-target" id="heartTarget">
@@ -883,29 +911,23 @@
         </svg>
       </div>
 
-      <!-- Dotted laser aim guide that rotates with you -->
       <div class="aim-guide-line" id="aimGuide"></div>
 
-      <!-- Controllable Cupid Bow -->
       <div class="bow-container" id="cupidBow">
         <div class="arrow-flight" id="arrowFlight">💘</div>
         <svg class="bow-svg" viewBox="0 0 100 100" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round">
-          <!-- Bow Wood curve -->
           <path d="M15,85 Q50,15 85,85" stroke="#ffd166" />
-          <!-- Bowstring -->
           <line x1="15" y1="85" x2="85" y2="85" stroke="rgba(255,255,255,0.7)" stroke-width="2" id="bowString"/>
-          <!-- Bow grip center wrap -->
           <line x1="44" y1="36" x2="56" y2="36" stroke="#ff3366" stroke-width="6"/>
         </svg>
       </div>
 
-      <!-- Action Button + Keyboard/Touch instructions -->
-      <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
         <button class="btn-magic" id="shootArrowBtn" style="padding:10px 28px; font-size:15px;">
           <span>🏹 Shoot Arrow</span>
         </button>
         <div class="controls-tip">
-          📱 <b>Touch/Drag</b> to aim &amp; release • 💻 <b>Left/Right Arrows</b> to aim, <b>Space</b> to shoot
+          📱 <b>Drag to Aim &amp; Release</b> • 💻 <b>Left/Right Arrows</b> to aim, <b>Space</b> to shoot
         </div>
       </div>
     </div>
@@ -949,10 +971,10 @@
     </div>
   </div>
 
-  <!-- ================= STAGE 5: BALLOONS ================= -->
+  <!-- ================= STAGE 5: BALLOONS (Messages ONLY show when each balloon is popped) ================= -->
   <div class="screen-stage" id="stage-5">
     <h2 style="font-size: 26px; font-family: 'Playfair Display', serif; margin-bottom: 4px;">Pop the balloons 🎈</h2>
-    <div style="font-size: 13.5px; color: var(--text-muted);" id="balloonSubtitle">4 reasons are waiting inside. Pop each one!</div>
+    <div style="font-size: 13.5px; color: var(--text-muted);" id="balloonSubtitle">Pop a balloon to unlock its secret reason!</div>
 
     <div class="balloons-area">
       <div class="balloon-item" onclick="popBalloon(0, this)"></div>
@@ -1236,7 +1258,6 @@
       }
     }
 
-    // Stage 1 -> 2
     document.getElementById('unwrapBtn').addEventListener('click', function(e) {
       e.stopPropagation();
       goToStage(2);
@@ -1247,23 +1268,24 @@
       goToStage(2);
     });
 
-    // =========================================================
-    // --- STAGE 2: REALISTIC TOUCH & KEYBOARD CUPID CONTROLS ---
-    // =========================================================
+    // ====================================================================
+    // --- STAGE 2: ACCURATE HIT/MISS LOGIC WITH "TRY AGAIN" CHANCE ---
+    // ====================================================================
     const cupidZone = document.getElementById('cupidZone');
     const cupidBow = document.getElementById('cupidBow');
     const arrowFlight = document.getElementById('arrowFlight');
     const aimGuide = document.getElementById('aimGuide');
     const heartTarget = document.getElementById('heartTarget');
     const shootArrowBtn = document.getElementById('shootArrowBtn');
+    const missBanner = document.getElementById('missBanner');
 
-    let bowAngleDeg = 0; // -40deg to +40deg
+    let bowAngleDeg = 0;
     let isArrowInFlight = false;
     let isAimingTouch = false;
 
     function updateBowAim(angle) {
       if (isArrowInFlight) return;
-      // Clamp between -42 and 42 degrees
+      // Clamp rotation
       bowAngleDeg = Math.max(-42, Math.min(42, angle));
       cupidBow.style.transform = `rotate(${bowAngleDeg}deg)`;
       aimGuide.style.transform = `rotate(${bowAngleDeg}deg)`;
@@ -1287,33 +1309,60 @@
       isArrowInFlight = true;
       startMusic();
       aimGuide.style.opacity = '0';
+      missBanner.style.display = 'none';
 
-      // Calculate vector towards heart based on current angle
+      // ACCURACY CHECK:
+      // The heart is centered, so an accurate hit requires aiming between -14 and +14 degrees
+      const isAccurateHit = Math.abs(bowAngleDeg) <= 14;
+
       const rad = (bowAngleDeg * Math.PI) / 180;
-      const flyDistance = 220;
-      const targetX = Math.sin(rad) * flyDistance;
-      const targetY = -Math.cos(rad) * flyDistance;
 
-      arrowFlight.style.transition = 'transform 0.45s cubic-bezier(0.2, 0.9, 0.4, 1.1)';
-      arrowFlight.style.transform = `translateX(-50%) translate(${targetX}px, ${targetY}px) rotate(${bowAngleDeg}deg) scale(1.25)`;
+      if (isAccurateHit) {
+        // --- HIT PATH: Arrow strikes the heart ---
+        const flyDistance = 220;
+        const targetX = Math.sin(rad) * flyDistance;
+        const targetY = -Math.cos(rad) * flyDistance;
 
-      // Impact on Heart
-      setTimeout(() => {
-        heartTarget.classList.add('hit');
-        const heartRect = heartTarget.getBoundingClientRect();
-        triggerConfettiBurst(heartRect.left + heartRect.width / 2, heartRect.top + heartRect.height / 2, 45);
+        arrowFlight.style.transition = 'transform 0.45s cubic-bezier(0.2, 0.9, 0.4, 1.1)';
+        arrowFlight.style.transform = `translateX(-50%) translate(${targetX}px, ${targetY}px) rotate(${bowAngleDeg}deg) scale(1.25)`;
 
-        // Transition to next stage
+        // Heart breaks and pops open ONLY when correctly hit
         setTimeout(() => {
-          goToStage(3);
-        }, 750);
-      }, 450);
+          heartTarget.classList.add('hit');
+          const heartRect = heartTarget.getBoundingClientRect();
+          triggerConfettiBurst(heartRect.left + heartRect.width / 2, heartRect.top + heartRect.height / 2, 45);
+
+          // Proceed to birthday celebration stage
+          setTimeout(() => {
+            goToStage(3);
+          }, 750);
+        }, 450);
+
+      } else {
+        // --- MISS PATH: Arrow shoots off past the heart ---
+        const flyDistance = 420; // Flies completely past the top
+        const targetX = Math.sin(rad) * flyDistance;
+        const targetY = -Math.cos(rad) * flyDistance;
+
+        arrowFlight.style.transition = 'transform 0.5s ease-out';
+        arrowFlight.style.transform = `translateX(-50%) translate(${targetX}px, ${targetY}px) rotate(${bowAngleDeg}deg) scale(0.9)`;
+
+        // Give next chance after arrow misses
+        setTimeout(() => {
+          arrowFlight.style.opacity = '0';
+          missBanner.style.display = 'block';
+
+          // Reset bow and arrow for the next chance
+          setTimeout(() => {
+            resetBowAndArrow();
+          }, 400);
+        }, 500);
+      }
     }
 
-    // Touch & Pointer Drag Aiming (Phone, Tablet & Mouse)
+    // Touch & Pointer Drag Aiming
     cupidZone.addEventListener('pointerdown', (e) => {
       if (isArrowInFlight) return;
-      // Don't intercept button clicks
       if (e.target.closest('#shootArrowBtn')) return;
       isAimingTouch = true;
       aimWithPointer(e);
@@ -1337,7 +1386,7 @@
       const bowCenterY = bowRect.top + bowRect.height / 2;
       
       const deltaX = e.clientX - bowCenterX;
-      const deltaY = bowCenterY - e.clientY; // Inverted because higher is lower Y
+      const deltaY = bowCenterY - e.clientY;
 
       let angle = Math.atan2(deltaX, Math.max(deltaY, 40)) * (180 / Math.PI);
       updateBowAim(angle);
@@ -1348,16 +1397,15 @@
       if (currentStage !== 2 || isArrowInFlight) return;
 
       if (e.key === 'ArrowLeft' || e.key === 'Left') {
-        updateBowAim(bowAngleDeg - 6);
+        updateBowAim(bowAngleDeg - 5);
       } else if (e.key === 'ArrowRight' || e.key === 'Right') {
-        updateBowAim(bowAngleDeg + 6);
+        updateBowAim(bowAngleDeg + 5);
       } else if (e.key === 'ArrowUp' || e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
         shootArrow();
       }
     });
 
-    // Button Click or Tap
     shootArrowBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       shootArrow();
@@ -1399,7 +1447,9 @@
       goToStage(5);
     });
 
-    // Stage 5 Balloon Popping
+    // ====================================================================
+    // --- STAGE 5: BALLOONS (Reveal only when the balloon is popped) ---
+    // ====================================================================
     let poppedCount = 0;
     function popBalloon(index, el) {
       startMusic();
@@ -1407,8 +1457,11 @@
       el.classList.add('popped');
       poppedCount++;
 
+      // Reveal the specific reason card for this popped balloon
       const rBox = document.getElementById(`reason-${index}`);
-      if (rBox) rBox.classList.add('unlocked');
+      if (rBox) {
+        rBox.classList.add('revealed');
+      }
 
       const rect = el.getBoundingClientRect();
       triggerConfettiBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
@@ -1495,8 +1548,13 @@
       poppedCount = 0;
       flame.classList.remove('blown');
       resetBowAndArrow();
+      missBanner.style.display = 'none';
       document.querySelectorAll('.balloon-item').forEach(b => b.classList.remove('popped'));
-      document.querySelectorAll('.reason-box').forEach(r => r.classList.remove('unlocked'));
+      document.querySelectorAll('.reason-box').forEach(r => {
+        r.classList.remove('revealed');
+        r.style.display = 'none';
+      });
+      document.getElementById('balloonSubtitle').innerText = "Pop a balloon to unlock its secret reason!";
       document.getElementById('envelopeScreen').style.display = 'block';
       document.getElementById('letterPaper').style.display = 'none';
       document.getElementById('balloonNextBtn').style.display = 'none';
